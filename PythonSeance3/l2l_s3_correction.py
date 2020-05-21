@@ -55,7 +55,7 @@ inputs_import = [
     Args('nat2018_epured_5k.csv', 85033),
     Args('nat2018_r300.csv', 1043),
     Args('nat2018_r300.csv', 2011),
-    Args('nat2018_n20.csv', 30082),
+    Args('nat2018_n20.csv', 30082)
 ]
 
 inputs_averages = [
@@ -66,7 +66,7 @@ inputs_averages = [
     Args('nat2018_epured_5k.csv', 1136),
     Args('nat2018_r300.csv', 1000),
     Args('nat2018_r300.csv', 2011),
-    Args('nat2018_n20.csv', 1691),
+    Args('nat2018_n20.csv', 1691)
 ]
 
 # Fonctions de correction

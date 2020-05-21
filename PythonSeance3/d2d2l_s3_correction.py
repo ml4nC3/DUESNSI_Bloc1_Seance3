@@ -7,66 +7,88 @@ import csv
 def importer_donnees(fichier):
     with open(fichier, encoding='utf-8-sig') as nat_file:
         nat_data = csv.reader(nat_file, delimiter=';')
-        nat_list = []
+        nat_dict = dict()
         for row in nat_data:
-            if nat_data.line_num == 1:
-                nat_list.append(row)
-            else:
-                nat_list.append([row[0], row[1], int(row[2]), int(row[3])])
-    return nat_list
+            if nat_data.line_num != 1:
+                genre = int(row[0]) - 1  # Conversion : 0 = homme, 1 = Femme
+                prenom = row[1]
+                annee = int(row[2])
+                # Si le prénom n'est pas présent dans la structure : intialisation
+                if prenom not in nat_dict:
+                    nat_dict[prenom] = {annee: [0, 0]}
+
+                # Si l'annee n'existe pas encore pour le prénom en cours : initialisation
+                if annee not in nat_dict[prenom]:  # l'année n'est pas créée
+                    nat_dict[prenom][annee] = [0, 0]
+
+                # Valorisation de l'effectif
+                nat_dict[prenom][annee][genre] = int(row[3])
+
+    return nat_dict
 
 
-def ages_moyens(datas):
-    aver_ages = [["sex", "name", "average_age"],
-                 [datas[1][0], datas[1][1]]]  # Initialisation du premier nom de la liste
-    sum_ages, sum_count = 0, 0  # Initialisation des variables de comptage
+def ages_moyens(data):
+    aver_ages = dict()
+    for name in data.keys():
+        calc = {0: {"sum_ages": 0, "sum_births": 0},
+                1: {"sum_ages": 0, "sum_births": 0}}
+        # Parcours des années enregistrées pour le prénom
+        for year in data[name].keys():
+            # Calcul des variables pour hommes puis femmes
+            for gender, births in enumerate(data[name][year]):
+                calc[gender]["sum_ages"] += (2020 - year) * births  # Somme des ages pondérée par les naissances
+                calc[gender]["sum_births"] += births  # Somme des naissances
 
-    for record in datas[1:]:
-        if record[0:2] == aver_ages[-1][0:2]:  # Si le sexe et le nom sont égaux à l'enregistrement en cours
-            sum_ages = sum_ages + (2020 - record[2]) * record[3]  # Calcul de l'age pondéré par l'effectif
-            sum_count = sum_count + record[3]  # Calcul des effectifs totaux (dénominateur)
-        else:
-            aver_ages[-1].append(sum_ages / sum_count)  # Si le nom change on ajoute l'age moyen à la dernière ligne
-            aver_ages.append([record[0], record[1]])  # Ajout du nouveau nom dans une nouvelle ligne
-            sum_ages = (2020 - record[2]) * record[3]  # Calcul du premier age pondéré
-            sum_count = record[3]  # Initialisation de la somme des effectifs
+        # Initalisation du dictionnaire pour le prénom en cours
+        aver_ages[name] = dict()
 
-    aver_ages[-1].append(sum_ages / sum_count)  # On met à jour l'age moyen du dernier prénom dans la dernière ligne
+        # Calcul de l'age moyen pondéré total
+        total_ages = calc[0]["sum_ages"] + calc[1]["sum_ages"]
+        total_births = calc[0]["sum_births"] + calc[1]["sum_births"]
+        aver_ages[name]["total"] = total_ages / total_births
+
+        # Gestion du cas de division par 0 et calcul pour hommes et femmes
+        if calc[0]["sum_births"] != 0:
+            aver_ages[name]["hommes"] = calc[0]["sum_ages"] / calc[0]["sum_births"]
+
+        if calc[1]["sum_births"] != 0:
+            aver_ages[name]["femmes"] = calc[1]["sum_ages"] / calc[1]["sum_births"]
+
     return aver_ages
 
 
 # Fonctions intermédiaires de sélection des données à vérifier
-def verifier_donnees(fichier, index):
-    liste = importer_donnees(fichier)
-    return liste[index]
+def verifier_donnees(fichier, prenom, annee):
+    data = importer_donnees(fichier)
+    return data[prenom][annee]
 
-def verifier_aver_ages(fichier, index):
-    liste = importer_donnees(fichier)
-    moyennes = ages_moyens(liste)
-    return int(moyennes[index][2])
+def verifier_aver_ages(fichier, prenom):
+    data = importer_donnees(fichier)
+    moyennes = ages_moyens(data)
+    return moyennes[prenom]
 
 
 # Liste des cas de test
 inputs_import = [
-    Args('nat2018_epured_5k.csv', 1045),
-    Args('nat2018_r300.csv', 24),
-    Args('nat2018_n20.csv', 12960),
-    Args('nat2018_epured_5k.csv', 386),
-    Args('nat2018_epured_5k.csv', 85033),
-    Args('nat2018_r300.csv', 1043),
-    Args('nat2018_r300.csv', 2011),
-    Args('nat2018_n20.csv', 30082),
+    Args('nat2018_epured_5k.csv', "NICOLAS", 1984),
+    Args('nat2018_r300.csv', "ALLAIN", 1956),
+    Args('nat2018_n20.csv', "WALLY", 2005),
+    Args('nat2018_epured_5k.csv', "_PRENOMS_RARES", 2018),
+    Args('nat2018_epured_5k.csv', "MICHELINE", 1935),
+    Args('nat2018_r300.csv', "RAYMONDE", 1977),
+    Args('nat2018_r300.csv', "ANATOLE", 1911),
+    Args('nat2018_n20.csv', "ÉYA", 2018)
 ]
 
 inputs_averages = [
-    Args('nat2018_epured_5k.csv', 1045),
-    Args('nat2018_r300.csv', 24),
-    Args('nat2018_n20.csv', 58),
-    Args('nat2018_epured_5k.csv', 386),
-    Args('nat2018_epured_5k.csv', 1136),
-    Args('nat2018_r300.csv', 1000),
-    Args('nat2018_r300.csv', 2011),
-    Args('nat2018_n20.csv', 1691),
+    Args('nat2018_epured_5k.csv', "NICOLAS"),
+    Args('nat2018_r300.csv', "ALLAIN"),
+    Args('nat2018_n20.csv', "WALLY"),
+    Args('nat2018_epured_5k.csv', "_PRENOMS_RARES"),
+    Args('nat2018_epured_5k.csv', "MICHELINE"),
+    Args('nat2018_r300.csv', "RAYMONDE"),
+    Args('nat2018_r300.csv', "ANATOLE"),
+    Args('nat2018_n20.csv', "ÉYA")
 ]
 
 # Fonctions de correction
