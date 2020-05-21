@@ -9,29 +9,31 @@ def importer_donnees(fichier):
         nat_data = csv.reader(nat_file, delimiter=';')
         nat_list = []
         for row in nat_data:
-            if nat_data.line_num == 1:
-                nat_list.append(row)
-            else:
-                nat_list.append([row[0], row[1], int(row[2]), int(row[3])])
+            if nat_data.line_num != 1:
+                nat_list.append({"sexe": row[0], "prenom": row[1], "annee": int(row[2]), "effectif": int(row[3])})
     return nat_list
 
 
 def ages_moyens(datas):
-    aver_ages = [["sex", "name", "average_age"],
-                 [datas[1][0], datas[1][1]]]  # Initialisation du premier nom de la liste
+    aver_ages = [{"sexe": datas[0]["sexe"], "prenom": datas[0]["prenom"]}]  # Initialisation du premier nom de la liste
     sum_ages, sum_count = 0, 0  # Initialisation des variables de comptage
 
-    for record in datas[1:]:
-        if record[0:2] == aver_ages[-1][0:2]:  # Si le sexe et le nom sont égaux à l'enregistrement en cours
-            sum_ages = sum_ages + (2020 - record[2]) * record[3]  # Calcul de l'age pondéré par l'effectif
-            sum_count = sum_count + record[3]  # Calcul des effectifs totaux (dénominateur)
+    for record in datas:
+        if (record["sexe"], record["prenom"]) == (aver_ages[-1]["sexe"], aver_ages[-1]["prenom"]):
+            # Si le sexe et le nom sont égaux à l'enregistrement en cours
+            sum_ages = sum_ages + (2020 - record["annee"]) * record[
+                "effectif"]  # Calcul de l'age pondéré par l'effectif
+            sum_count = sum_count + record["effectif"]  # Calcul des effectifs totaux (dénominateur)
         else:
-            aver_ages[-1].append(sum_ages / sum_count)  # Si le nom change on ajoute l'age moyen à la dernière ligne
-            aver_ages.append([record[0], record[1]])  # Ajout du nouveau nom dans une nouvelle ligne
-            sum_ages = (2020 - record[2]) * record[3]  # Calcul du premier age pondéré
-            sum_count = record[3]  # Initialisation de la somme des effectifs
+            # Si le nom change on ajoute l'age moyen à la dernière ligne
+            aver_ages[-1]["average"] = sum_ages / sum_count
+            aver_ages.append(
+                {"sexe": record["sexe"], "prenom": record["prenom"]})  # Ajout du nouveau nom dans une nouvelle ligne
+            sum_ages = (2020 - record["annee"]) * record["effectif"]  # Calcul du premier age pondéré
+            sum_count = record["effectif"]  # Initialisation de la somme des effectifs
 
-    aver_ages[-1].append(sum_ages / sum_count)  # On met à jour l'age moyen du dernier prénom dans la dernière ligne
+    aver_ages[-1][
+        "average"] = sum_ages / sum_count  # On met à jour l'age moyen du dernier prénom dans la dernière ligne
     return aver_ages
 
 
@@ -43,7 +45,7 @@ def verifier_donnees(fichier, index):
 def verifier_aver_ages(fichier, index):
     liste = importer_donnees(fichier)
     moyennes = ages_moyens(liste)
-    return int(moyennes[index][2])
+    return int(moyennes[index]["average"])
 
 
 # Liste des cas de test
@@ -52,10 +54,10 @@ inputs_import = [
     Args('nat2018_r300.csv', 24),
     Args('nat2018_n20.csv', 12960),
     Args('nat2018_epured_5k.csv', 386),
-    Args('nat2018_epured_5k.csv', 85033),
+    Args('nat2018_epured_5k.csv', 85032),
     Args('nat2018_r300.csv', 1043),
-    Args('nat2018_r300.csv', 2011),
-    Args('nat2018_n20.csv', 30082),
+    Args('nat2018_r300.csv', 2010),
+    Args('nat2018_n20.csv', 30081),
 ]
 
 inputs_averages = [
@@ -63,10 +65,10 @@ inputs_averages = [
     Args('nat2018_r300.csv', 24),
     Args('nat2018_n20.csv', 58),
     Args('nat2018_epured_5k.csv', 386),
-    Args('nat2018_epured_5k.csv', 1136),
+    Args('nat2018_epured_5k.csv', 1135),
     Args('nat2018_r300.csv', 1000),
-    Args('nat2018_r300.csv', 2011),
-    Args('nat2018_n20.csv', 1691),
+    Args('nat2018_r300.csv', 2010),
+    Args('nat2018_n20.csv', 1690),
 ]
 
 # Fonctions de correction
