@@ -31,18 +31,13 @@ with open('nat2018_n20.csv', 'w', encoding='utf-8', newline='') as reduced_file:
             csv_writer.writerow(row)
 
 # Prépare un dictionnaire des prénoms avec le total de leur nombre de naissance
-previous_name = ''
 mains_names = {}
-count = 0
 for row in nat_list[1:]:
-    if row[1] == previous_name:
-        count += int(row[3])
+    if row[1] in mains_names:
+        mains_names[row[1]] += int(row[3])
     else:
-        mains_names[previous_name] = count
-        print(f'{previous_name}: {count}')
-        count = int(row[3])
-        previous_name = row[1]
-mains_names[previous_name] = count
+        mains_names[row[1]] = int(row[3])
+
 
 # Créé un fichier avec les prénoms donnés plus de 1000 fois en tout
 with open('nat2018_epured_1k.csv', 'w', encoding='utf-8', newline='') as reduced_file:
